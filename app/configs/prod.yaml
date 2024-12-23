@@ -1,0 +1,5 @@
+database:
+  db: apidb
+  host: prod-db.tibber.com
+  user: prod_user
+  password: prod_secret

@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  api:
+    build: .
+    environment:
+      - ENV=${ENV:-dev}
+      - PYTHONPATH=/app
+    ports:
+      - "5000:5000"
+    restart: unless-stopped
+
+  db:
+    image: postgres:15
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_DB=apidb
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    profiles:
+      - dev
+      - test
+
+  test:
+    build: .
+    command: pytest --cov=app --cov-report=term-missing
+    depends_on:
+      - db
+    environment:
+      - ENV=dev
+      - PYTHONPATH=/app
+    profiles:
+      - test
+    volumes:
+      - .:/app

@@ -1,0 +1,5 @@
+database:
+  db: apidb
+  host: db
+  user: postgres
+  password: postgres

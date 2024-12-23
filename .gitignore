@@ -1,0 +1,56 @@
+# Python-related files
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.env
+*.venv/
+*.egg-info/
+*.egg
+*.log
+
+# Virtual environments
+venv/
+ENV/
+env/
+.venv/
+
+# Dependency files
+*.lock
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Flask-related files
+instance/
+*.sqlite3
+*.db
+
+# Environment variables
+.env
+*.env.*
+
+# Coverage and test results
+.coverage
+htmlcov/
+*.cover
+coverage.xml
+
+# Pytest
+.cache/
+.pytest_cache/
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Docker
+*.dockerignore
+docker-compose.override.yml
+.env.docker
+
+# Other
+.DS_Store
+*.bak
+*.orig
