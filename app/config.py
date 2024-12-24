@@ -3,7 +3,8 @@ import yaml
 
 
 def load_config_from_env(environment):
-    config_path = f"app/configs/{environment}.yaml"
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    config_path = os.path.join(current_dir, "configs", f"{environment}.yaml")
     with open(config_path, "r") as f:
         return yaml.safe_load(f)
 

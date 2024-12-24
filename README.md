@@ -2,16 +2,23 @@
 
 ## Quick Start Instructions
 
+### Local development
 In order to run a local development server with a local Postgres database, run:
 ```
-docker-compose --profile dev up --build  
+docker-compose --profile dev up --build
 ```
 
+It's also possible to run `main.py` directly in order to to debug within an IDE,
+which would require connecting to an existing database and possibly changing the
+existing configs values. 
+
+### Running unit / integration tests
 Running tests, which will also display coverage, can be done via:
 ```
 docker-compose --profile test run test
 ```
 
+### Loading in different configs
 In order to load the production config, set environment variable ENV to prod and
 then run the docker compose command:
 ```
