@@ -122,3 +122,32 @@ def test_running_in_circles(client):
         assert execution.result == data["result"]
         assert execution.result == 4
         assert execution.duration == data["duration"]
+
+
+def test_running_maximum_commands(client):
+    """
+    Test to verify performance when running 10,000 commands with maximum
+    amount of steps (99,999).
+    """
+
+    # Fetch response data
+    data = _get_response_data(client, {
+        "start": {"x": -100000, "y": -100000},
+        "commands": [
+            {"direction": "east", "steps": 99999},
+            {"direction": "north", "steps": 99999},
+            {"direction": "west", "steps": 99998},
+            {"direction": "south", "steps": 99998},
+        ] * 2500
+    })
+
+    # Verify the database has the entry and that it runs within 10s
+    with app.app_context():
+        execution = Execution.query.session.get(Execution, data["id"])
+        assert execution is not None
+        assert execution.id == data["id"]
+        assert execution.commands == data["commands"]
+        assert execution.commands == 10000
+        assert execution.result == data["result"]
+        assert execution.result == 993737501
+        assert execution.duration < 10

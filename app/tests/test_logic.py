@@ -1,112 +1,132 @@
-from app import logic
+from app import algorithms, logic
 
 
-def test_add_existing_to_unique_coordinates():
+def test_add_to_ranges_east():
     """
-    Tests that adding the same coordinate twice does not a new coordinate
-    when using the `_add_to_unique_coordinates` function.
+    Tests that `_add_to_ranges` correctly adds a new entry to the `x_ranges` set in the
+    'east' direction.
     """
-    existing_coordinate = (1, 1)
-    unique_coordinates = {existing_coordinate}
-    logic._add_to_unique_coordinates(unique_coordinates, [existing_coordinate])
-    assert unique_coordinates == {existing_coordinate}
+    starting_coordinate = (10, 20)
+    command = {"direction": "east", "steps": 2}
+    x_ranges = set()
+    y_ranges = set()
+
+    new_coordinate = logic._add_to_ranges(starting_coordinate, command, x_ranges, y_ranges)
+    assert new_coordinate == (12, 20)
+    assert x_ranges == {(20, 10, 12)}
+    assert y_ranges == set()
 
 
-def test_add_new_to_unique_coordinates():
+def test_add_to_ranges_north():
     """
-    Tests that adding new coordinates adds these coordinate to the
-    unique coordinates when using the `_add_to_unique_coordinates` function.
+    Tests that `_add_to_ranges` correctly adds a new entry to the `y_ranges` set in the
+    'north' direction.
     """
-    existing_coordinate = (1, 1)
-    new_coordinates = [(1, 2), (1, 3), (1, 4), (1, 5), (1, 6)]
-    unique_coordinates = {existing_coordinate}
-    logic._add_to_unique_coordinates(unique_coordinates, new_coordinates)
-    assert len(unique_coordinates) == 6
-    assert existing_coordinate in unique_coordinates
-    for coordinate in new_coordinates:
-        assert coordinate in unique_coordinates
+    starting_coordinate = (12, 20)
+    command = {"direction": "north", "steps": 5}
+    x_ranges = {(20, 10, 12)}
+    y_ranges = set()
+
+    new_coordinate = logic._add_to_ranges(starting_coordinate, command, x_ranges, y_ranges)
+    assert new_coordinate == (12, 25)
+    assert x_ranges == {(20, 10, 12)}
+    assert y_ranges == {(12, 20, 25)}
 
 
-def test_add_mix_to_unique_coordinates():
+def test_add_to_ranges_west():
     """
-    Tests that adding a mix of existing and new coordinates to the
-    unique coordinates when using the `_add_to_unique_coordinates` function will
-    only add the new coordinates.
+    Tests that `_add_to_ranges` correctly adds a new entry to the `x_ranges` set in the
+    'west' direction.
     """
-    existing_coordinate = (1, 1)
-    new_coordinates = [(1, 2), (1, 1), (1, 4), (1, 1), (1, 6)]
-    unique_coordinates = {existing_coordinate}
-    logic._add_to_unique_coordinates(unique_coordinates, new_coordinates)
-    assert len(unique_coordinates) == 4
-    assert existing_coordinate in unique_coordinates
-    assert new_coordinates[0] in unique_coordinates
-    assert new_coordinates[2] in unique_coordinates
-    assert new_coordinates[4] in unique_coordinates
+    starting_coordinate = (12, 25)
+    command = {"direction": "west", "steps": 9999}
+    x_ranges = {(20, 10, 12)}
+    y_ranges = {(12, 20, 25)}
+
+    new_coordinate = logic._add_to_ranges(starting_coordinate, command, x_ranges, y_ranges)
+    assert new_coordinate == (-9987, 25)
+    assert x_ranges == {(20, 10, 12), (25, -9987, 12)}
+    assert y_ranges == {(12, 20, 25)}
 
 
-def test_get_vertices_north():
+def test_add_to_ranges_south():
     """
-    Tests that `_get_vertices` correctly creates a list of new coordinates when
-    the direction is "north" and the number of steps is 2.
+    Tests that `_add_to_ranges` correctly adds a new entry to the `y_ranges` set in the
+    'south' direction.
     """
-    start = (1, 1)
-    command = {"direction": "north", "steps": 2}
-    expected = [(1, 2), (1, 3)]
-    assert logic._get_vertices(start, command) == expected
+    starting_coordinate = (-9987, 25)
+    command = {"direction": "south", "steps": 3456}
+    x_ranges = {(20, 10, 12), (25, -9987, 12)}
+    y_ranges = {(12, 20, 25)}
+
+    new_coordinate = logic._add_to_ranges(starting_coordinate, command, x_ranges, y_ranges)
+    assert new_coordinate == (-9987, -3431)
+    assert x_ranges == {(20, 10, 12), (25, -9987, 12)}
+    assert y_ranges == {(12, 20, 25), (-9987, -3431, 25)}
 
 
-def test_get_vertices_east():
+def test_merge_ranges_without_overlap():
     """
-    Tests that `_get_vertices` correctly creates a list of new coordinates when
-    the direction is "east" and the number of steps is 3.
+    Tests that `_merge_ranges` correctly leaves ranges in places that do no need to
+    be merged.
     """
-    start = (1, 1)
-    command = {"direction": "east", "steps": 3}
-    expected = [(2, 1), (3, 1), (4, 1)]
-    assert logic._get_vertices(start, command) == expected
+    ranges = {(1, 1, 100), (2, 1, 100), (3, 50, 100)}
+    assert logic._merge_ranges(ranges) == ranges
 
 
-def test_get_vertices_south():
+def test_merge_ranges_with_overlap():
     """
-    Tests that `_get_vertices` correctly creates a list of new coordinates when
-    the direction is "south" and the number of steps is 4.
+    Tests that `_merge_ranges` correctly merges ranges when there is overlap.
     """
-    start = (1, 1)
-    command = {"direction": "south", "steps": 4}
-    expected = [(1, 0), (1, -1), (1, -2), (1, -3)]
-    assert logic._get_vertices(start, command) == expected
+    ranges = {(1, 1, 100), (1, 1, 101), (3, 50, 100)}
+    expected = {(1, 1, 101), (3, 50, 100)}
+    assert logic._merge_ranges(ranges) == expected
 
+    ranges = {(1, -21, 100), (1, 1, 101), (3, 50, 100)}
+    expected = {(1, -21, 101), (3, 50, 100)}
+    assert logic._merge_ranges(ranges) == expected
 
-def test_get_vertices_west():
-    """
-    Tests that `_get_vertices` correctly creates a list of new coordinates when
-    the direction is "west" and the number of steps is 5.
-    """
-    start = (1, 1)
-    command = {"direction": "west", "steps": 5}
-    expected = [(0, 1), (-1, 1), (-2, 1), (-3, 1), (-4, 1)]
-    assert logic._get_vertices(start, command) == expected
+    ranges = {(1, -999, 999), (1, 1, 101), (3, 50, 100)}
+    expected = {(1, -999, 999), (3, 50, 100)}
+    assert logic._merge_ranges(ranges) == expected
+
+    ranges = {(1, 50, 999), (1, 1, 101), (3, 50, 100)}
+    expected = {(1, 1, 999), (3, 50, 100)}
+    assert logic._merge_ranges(ranges) == expected
 
 
 def test_calculate_unique_coordinates():
     """
     Tests that `calculate_unique_coordinates` correctly returns 4 coordinates when
-    taking 2 steps east and 1 step north.
+    taking 2 steps east and 1 step north and using all 3 algorithms.
     """
+    counting_algorithms = [
+        algorithms.BinarySearch,
+        algorithms.EarlyIntersectionFiltering,
+        algorithms.SimpleIntersection,
+    ]
     start = (1, 1)
     commands = [
         {"direction": "east", "steps": 2},
         {"direction": "north", "steps": 1},
     ]
     expected = 4
-    assert logic.calculate_unique_coordinates(start, commands)[0] == expected
+
+    for algorithm in counting_algorithms:
+        assert logic.calculate_unique_coordinates(start, commands, algorithm)[0] == expected
 
 
 def test_calculate_unique_coordinates_overlapping():
     """
     Tests that `calculate_unique_coordinates` correctly returns the number of unique
-    coordinates when there is an overlap in the vertices as it makes a small circle.
+    coordinates when there is an overlap in the vertices as it makes a small circle and
+    using all 3 algorithms.
     """
+    counting_algorithms = [
+        algorithms.BinarySearch,
+        algorithms.EarlyIntersectionFiltering,
+        algorithms.SimpleIntersection,
+    ]
     start = (1, 1)
     commands = [
         {"direction": "east", "steps": 2},
@@ -115,15 +135,22 @@ def test_calculate_unique_coordinates_overlapping():
         {"direction": "south", "steps": 2},
     ]
     expected = 6
-    assert logic.calculate_unique_coordinates(start, commands)[0] == expected
+
+    for algorithm in counting_algorithms:
+        assert logic.calculate_unique_coordinates(start, commands, algorithm)[0] == expected
 
 
 def test_calculate_unique_coordinates_in_circles():
     """
     Tests that `calculate_unique_coordinates` correctly returns the number of unique
     coordinates when there are a lot of overlaps in the vertices as it makes 100
-    circles in this test.
+    circles in this test, using all 3 algorithms.
     """
+    counting_algorithms = [
+        algorithms.BinarySearch,
+        algorithms.EarlyIntersectionFiltering,
+        algorithms.SimpleIntersection,
+    ]
     start = (1, 1)
     commands = [
         {"direction": "east", "steps": 1},
@@ -132,4 +159,60 @@ def test_calculate_unique_coordinates_in_circles():
         {"direction": "south", "steps": 1},
     ] * 100
     expected = 4
-    assert logic.calculate_unique_coordinates(start, commands)[0] == expected
+
+    for algorithm in counting_algorithms:
+        assert logic.calculate_unique_coordinates(start, commands, algorithm)[0] == expected
+
+
+def test_calculate_unique_coordinates_complicated_movement():
+    """
+    Tests that `calculate_unique_coordinates` correctly returns the number of unique
+    coordinates when there are a lot of overlaps in the vertices as it makes 100
+    circles in this test, using all 3 algorithms.
+    """
+    counting_algorithms = [
+        algorithms.BinarySearch,
+        algorithms.EarlyIntersectionFiltering,
+        algorithms.SimpleIntersection,
+    ]
+    start = (1, 1)
+    commands = [
+        {"direction": "east", "steps": 5},
+        {"direction": "north", "steps": 1},
+        {"direction": "east", "steps": 5},
+        {"direction": "south", "steps": 2},
+        {"direction": "west", "steps": 8},
+        {"direction": "north", "steps": 1},
+        {"direction": "west", "steps": 5},
+    ]
+    expected = 25
+
+    for algorithm in counting_algorithms:
+        assert logic.calculate_unique_coordinates(start, commands, algorithm)[0] == expected
+
+
+def test_calculate_unique_coordinates_maximum_input():
+    """
+    Tests that `calculate_unique_coordinates` is performant for large inputs, ensuring that
+    it does not take longer than 10s to finish, using all 3 algorithms.
+
+    NOTE: takes approximately 20s to run, since it takes 5 to 10s per algorithm
+    """
+    counting_algorithms = [
+        algorithms.BinarySearch,
+        algorithms.EarlyIntersectionFiltering,
+        algorithms.SimpleIntersection,
+    ]
+    start = (-100000, -100000)
+    commands = [
+        {"direction": "east", "steps": 99999},
+        {"direction": "north", "steps": 99999},
+        {"direction": "west", "steps": 99998},
+        {"direction": "south", "steps": 99998},
+    ] * 2500
+    expected = 993737501
+
+    for algorithm in counting_algorithms:
+        unique_coordinates, duration = logic.calculate_unique_coordinates(start, commands, algorithm)
+        assert unique_coordinates == expected
+        assert duration < 10
